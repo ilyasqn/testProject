@@ -5,10 +5,10 @@ from fastapi.requests import Request
 from loguru import logger
 
 from src.db import async_session_maker
-from src.repositories.message import MessageRepository
+from src.repositories.test import TestRepository
 
 class IUnitOfWork(ABC):
-    message: MessageRepository
+    tests: TestRepository
 
     session_factory = None
     _session = None
@@ -16,7 +16,7 @@ class IUnitOfWork(ABC):
     _session_id_body = str(uuid.uuid4())
 
     def init_repositories(self):
-        self.message = MessageRepository(self.session)
+        self.tests = TestRepository(self.session)
 
     def set_session_id_prefix(self, value):
         self._session_id_prefix = value

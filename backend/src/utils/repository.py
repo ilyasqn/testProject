@@ -35,19 +35,17 @@ class SQLAlchemyRepository(Generic[SchemaType], AbstractRepository):
     async def get_all(self) -> list[SchemaType]:
         stmt = select(self.model)
         res = await self.session.execute(stmt)
-        return [row[0].get_schema() for row in res.all()]
+        return res.scalars().all()
 
     async def get_one(self, **filter_by) -> SchemaType | None:
         stmt = select(self.model).filter_by(**filter_by)
         res = await self.session.execute(stmt)
-        res = res.scalar_one_or_none()
-        return res.get_schema()
+        return res.scalar_one_or_none()
 
     async def get_all_with_filters(self, **filter_by) -> list[SchemaType]:
         stmt = select(self.model).filter_by(**filter_by)
         res = await self.session.execute(stmt)
-        res = [row[0].get_schema() for row in res.all()]
-        return res
+        return res.scalars().all()
 
     async def delete(self, **filter_by) -> None:
         stmt = delete(self.model).filter_by(**filter_by)
