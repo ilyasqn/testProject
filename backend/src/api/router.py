@@ -1,29 +1,10 @@
-from typing import Annotated
-from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
-from src.schemas.test import TestSchemaRead
-from src.services.test import TestService
+from fastapi import APIRouter
 
-from src.utils.unitofwork import UnitOfWork, IUnitOfWork
+from .test.router import router as test_router
+from .user.router import router as user_router
 
-from src.utils import exceptions
-from loguru import logger
-
-from src.limiter import limiter
-
-router = APIRouter()
-
-
-@router.get(
-    "/get_all_tests",
-    response_model=list[TestSchemaRead],
-    responses={
-        **exceptions.BadRequestHTTPException.response()
-    }
+router = APIRouter(
+    prefix="/api"
 )
-# @limiter.limit("5/minute")
-async def get_tests(
-        uow: Annotated[IUnitOfWork, Depends(UnitOfWork)]
-):
-    tests = await TestService.get_all_tests(uow)
-    return tests
+router.include_router(test_router)
+router.include_router(user_router)

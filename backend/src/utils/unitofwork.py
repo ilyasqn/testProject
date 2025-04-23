@@ -5,10 +5,11 @@ from fastapi.requests import Request
 from loguru import logger
 
 from src.db import async_session_maker
-from src.repositories.test import TestRepository
+from src.repositories import TestRepository, UserRepository
 
 class IUnitOfWork(ABC):
     tests: TestRepository
+    users: UserRepository
 
     session_factory = None
     _session = None
@@ -17,6 +18,7 @@ class IUnitOfWork(ABC):
 
     def init_repositories(self):
         self.tests = TestRepository(self.session)
+        self.users = UserRepository(self.session)
 
     def set_session_id_prefix(self, value):
         self._session_id_prefix = value
