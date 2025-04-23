@@ -1,7 +1,5 @@
-from sqlalchemy import Column, String, Integer
-from sqlalchemy.orm import declarative_base
-
-Base = declarative_base()
+from sqlalchemy import Column, String, Integer, DateTime
+from src.db.metadata import Base
 
 
 class Test(Base):
@@ -10,4 +8,4 @@ class Test(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(64), nullable=False)
     description = Column(String(128), nullable=True)
-    # created_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, nullable=False)
