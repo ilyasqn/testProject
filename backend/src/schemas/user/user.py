@@ -8,5 +8,12 @@ class UserSchemaAdd(BaseModel):
     password: str
 
 
-class UserSchemaRead(UserSchemaAdd):
+class UserSchemaRead(BaseModel):
     id: int
+    first_name: str
+    last_name: str
+    email: str
+
+
+class UserSchemaReadWithPassword(UserSchemaRead):
+    password: str
