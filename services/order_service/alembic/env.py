@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from shared.db.metadata import Base
-from src.models.notification import Notification
+from src.models.order import Order
 
 config = context.config
 

@@ -6,8 +6,7 @@ from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from shared.db.metadata import Base
-from src.models.product.product import Product
-from src.models.order.order import Order
+from src.models.product import Product
 
 config = context.config
 

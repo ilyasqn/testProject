@@ -1,5 +1,4 @@
 from src.services.product import ProductService
-from src.services.order import OrderService
 from shared.cache import RedisCache
 from shared.broker import RabbitMQBroker
 
@@ -17,5 +16,9 @@ def get_product_service() -> ProductService:
     return ProductService(cache=_cache, broker=_broker)
 
 
-def get_order_service() -> OrderService:
-    return OrderService(broker=_broker)
+def get_cache() -> RedisCache:
+    return _cache
+
+
+def get_broker() -> RabbitMQBroker:
+    return _broker

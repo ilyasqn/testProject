@@ -1,0 +1,13 @@
+alembic==1.15.2
+asyncpg==0.30.0
+fastapi==0.115.12
+loguru==0.7.3
+pydantic==2.11.2
+pydantic-settings==2.8.1
+python-dotenv==1.1.0
+python-jose[cryptography]
+slowapi==0.1.9
+SQLAlchemy==2.0.40
+uvicorn==0.34.0
+aio-pika
+python-multipart

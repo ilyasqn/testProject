@@ -12,7 +12,7 @@ from slowapi.errors import RateLimitExceeded
 
 from configs.rabbitmq import rabbitmq_settings
 from src.api.router import router as api_router
-from src.events import handle_event
+from src.handlers.event import EventHandler
 
 
 @asynccontextmanager
@@ -24,37 +24,49 @@ async def lifespan(app: FastAPI):
         queue_name="notification_service.user_registered",
         exchange_name="user_events",
         routing_key="user.registered",
-        callback=handle_event,
+        callback=EventHandler.handle,
     )
     await broker.consume(
         queue_name="notification_service.user_authenticated",
         exchange_name="user_events",
         routing_key="user.authenticated",
-        callback=handle_event,
+        callback=EventHandler.handle,
     )
     await broker.consume(
         queue_name="notification_service.product_created",
         exchange_name="product_events",
         routing_key="product.created",
-        callback=handle_event,
+        callback=EventHandler.handle,
     )
     await broker.consume(
         queue_name="notification_service.product_updated",
         exchange_name="product_events",
         routing_key="product.updated",
-        callback=handle_event,
+        callback=EventHandler.handle,
     )
     await broker.consume(
         queue_name="notification_service.product_deleted",
         exchange_name="product_events",
         routing_key="product.deleted",
-        callback=handle_event,
+        callback=EventHandler.handle,
     )
     await broker.consume(
         queue_name="notification_service.order_created",
         exchange_name="product_events",
         routing_key="order.created",
-        callback=handle_event,
+        callback=EventHandler.handle,
+    )
+    await broker.consume(
+        queue_name="notification_service.order_confirmed",
+        exchange_name="order_events",
+        routing_key="order.confirmed",
+        callback=EventHandler.handle,
+    )
+    await broker.consume(
+        queue_name="notification_service.order_cancelled",
+        exchange_name="order_events",
+        routing_key="order.cancelled",
+        callback=EventHandler.handle,
     )
 
     logger.info("Notification service started — consuming all events")
