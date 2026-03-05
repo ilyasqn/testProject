@@ -12,3 +12,4 @@ uvicorn==0.34.0
 aio-pika
 redis[hiredis]
 python-multipart
+prometheus-fastapi-instrumentator

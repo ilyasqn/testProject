@@ -11,3 +11,4 @@ SQLAlchemy==2.0.40
 uvicorn==0.34.0
 aio-pika
 python-multipart
+prometheus-fastapi-instrumentator

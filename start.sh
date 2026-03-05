@@ -33,6 +33,8 @@ kubectl port-forward svc/user-service         8001:8001 -n pet &
 kubectl port-forward svc/product-service      8002:8002 -n pet &
 kubectl port-forward svc/notification-service 8003:8003 -n pet &
 kubectl port-forward svc/order-service        8004:8004 -n pet &
+kubectl port-forward svc/prometheus           9090:9090 -n pet &
+kubectl port-forward svc/grafana              3000:3000 -n pet &
 
 echo ""
 echo "Services available at:"
@@ -40,5 +42,9 @@ echo "  user-service         -> http://localhost:8001/docs"
 echo "  product-service      -> http://localhost:8002/docs"
 echo "  notification-service -> http://localhost:8003/docs"
 echo "  order-service        -> http://localhost:8004/docs"
+echo ""
+echo "Observability:"
+echo "  Prometheus           -> http://localhost:9090"
+echo "  Grafana              -> http://localhost:3000  (admin / admin)"
 
 wait

@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from loguru import logger
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from shared.middlewares import LoggingMiddleware
 from shared.limiter import limiter
@@ -57,3 +58,5 @@ app.add_middleware(LoggingMiddleware)
 app.add_middleware(SlowAPIMiddleware)
 
 app.include_router(api_router)
+
+Instrumentator().instrument(app).expose(app)

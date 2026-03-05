@@ -10,3 +10,4 @@ SQLAlchemy==2.0.40
 uvicorn==0.34.0
 aio-pika
 aiohttp
+prometheus-fastapi-instrumentator
