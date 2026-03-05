@@ -1,6 +1,6 @@
 # Pet Project — Microservices API
 
-A microservices-based REST API built with FastAPI, PostgreSQL, RabbitMQ, Redis, and Kubernetes.
+A microservices-based REST API built with FastAPI, PostgreSQL, RabbitMQ, Redis, and Kubernetes. Includes full observability with Prometheus, Loki, and Grafana.
 
 ## Services
 
@@ -10,6 +10,9 @@ A microservices-based REST API built with FastAPI, PostgreSQL, RabbitMQ, Redis, 
 | product-service | 8002 | Product management & Saga executor |
 | notification-service | 8003 | Telegram notifications & notification history |
 | order-service | 8004 | Order management & Saga initiator |
+| Prometheus | 9090 | Metrics collection (scrapes `/metrics` from all services) |
+| Grafana | 3000 | Dashboards & log exploration (login: `admin` / `admin`) |
+| Loki | 3100 | Log aggregation (internal, accessed via Grafana) |
 
 ## Architecture
 
@@ -28,6 +31,10 @@ order-service        → PostgreSQL (order_db)
 
 notification-service → PostgreSQL (notification_db)
                      → RabbitMQ (consumes all events, sends Telegram notifications)
+
+all services         → Prometheus (/metrics endpoint, scraped every 15s)
+Promtail (DaemonSet) → Loki (ships pod logs)
+Grafana              → Prometheus + Loki (dashboards & explore)
 ```
 
 ### Order Saga Flow
@@ -61,6 +68,7 @@ POST /api/orders/
 - **Databases**: PostgreSQL 16 (separate DB per service)
 - **Message Broker**: RabbitMQ (topic exchanges, durable queues)
 - **Cache**: Redis 7
+- **Monitoring**: Prometheus + Grafana (metrics), Loki + Promtail (logs)
 - **Containerization**: Docker
 - **Orchestration**: Kubernetes (Minikube)
 
@@ -142,6 +150,19 @@ Token expiry:
 - Access token: 30 minutes
 - Refresh token: 24 hours
 
+## Observability
+
+Every service exposes `/metrics` via `prometheus-fastapi-instrumentator`, scraped by Prometheus every 15s. Promtail ships pod logs to Loki. Grafana provides dashboards and log exploration.
+
+**Key metrics** (exposed by all services):
+- `http_requests_total` — request count by `handler`, `method`, `status`
+- `http_request_duration_seconds` — latency histogram by handler
+- `http_request_duration_highr_seconds` — high-resolution latency (accurate percentiles)
+- `http_request_size_bytes` / `http_response_size_bytes` — payload sizes
+- `process_resident_memory_bytes`, `process_cpu_seconds_total` — resource usage
+
+**Logs**: query with `{namespace="pet"}` in Grafana → Explore → Loki
+
 ## Kubernetes
 
 All services run in the `pet` namespace:
@@ -180,8 +201,9 @@ kubectl exec -n pet $(kubectl get pods -n pet -l app=order-service -o jsonpath='
 │   ├── product-db.yaml         product-service.yaml
 │   ├── notification-db.yaml    notification-service.yaml
 │   ├── order-db.yaml           order-service.yaml
-│   ├── rabbitmq.yaml
-│   └── redis.yaml
+│   ├── rabbitmq.yaml           redis.yaml
+│   ├── prometheus.yaml         grafana.yaml
+│   └── loki.yaml               promtail.yaml
 ├── services/
 │   ├── user_service/           # User & auth (publishes events)
 │   ├── product_service/        # Products + Saga executor
