@@ -191,6 +191,65 @@ kubectl exec -n pet $(kubectl get pods -n pet -l app=order-service -o jsonpath='
   -- alembic upgrade head
 ```
 
+## Testing
+
+Tests are written with `pytest` + `pytest-asyncio`. All dependencies (DB, Redis, RabbitMQ, Telegram) are mocked — no running infrastructure needed.
+
+**63 tests total** across all four services:
+
+| Service | Tests | Coverage |
+|---|---|---|
+| user_service | 14 | API endpoints, service logic, JWT token creation |
+| product_service | 20 | API endpoints, service logic, cache behaviour, `decrement_stock` |
+| order_service | 15 | API endpoints, service logic, saga event handlers |
+| notification_service | 14 | API endpoint, service logic, event handler, formatters |
+
+### Setup (one-time)
+
+From the project root (`pet/`):
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -e shared/
+.venv/bin/pip install \
+  -r services/user_service/requirements.txt \
+  -r services/product_service/requirements.txt \
+  -r services/notification_service/requirements.txt \
+  -r services/order_service/requirements.txt \
+  pytest pytest-asyncio httpx pytest-mock
+```
+
+### Running Tests
+
+Run a single service:
+
+```bash
+cd services/user_service
+../../.venv/bin/python -m pytest tests/ -v
+```
+
+Run all services:
+
+```bash
+VENV=$(pwd)/.venv/bin/python
+for svc in user_service product_service order_service notification_service; do
+  echo "=== $svc ===" && cd services/$svc && $VENV -m pytest tests/ -v && cd ../..
+done
+```
+
+### Test Structure
+
+Each service has a `tests/` directory:
+
+```
+tests/
+├── conftest.py          # shared fixtures: mock_uow, mock_service, client
+├── test_api_*.py        # HTTP layer — status codes, response shape, auth enforcement
+├── test_service_*.py    # Business logic — mocked UoW, event publishing, exceptions
+├── test_handlers.py     # Event handlers — saga confirmed/cancelled, cascades
+└── test_repo_*.py       # Repository logic — decrement_stock edge cases
+```
+
 ## Project Structure
 
 ```
@@ -205,11 +264,16 @@ kubectl exec -n pet $(kubectl get pods -n pet -l app=order-service -o jsonpath='
 │   ├── prometheus.yaml         grafana.yaml
 │   └── loki.yaml               promtail.yaml
 ├── services/
-│   ├── user_service/           # User & auth (publishes events)
-│   ├── product_service/        # Products + Saga executor
-│   ├── order_service/          # Orders + Saga initiator
-│   └── notification_service/   # Event consumer → Telegram
+│   ├── user_service/
+│   │   └── tests/              # 14 tests (api, service, auth)
+│   ├── product_service/
+│   │   └── tests/              # 20 tests (api, service, repo)
+│   ├── order_service/
+│   │   └── tests/              # 15 tests (api, service, handlers)
+│   └── notification_service/
+│       └── tests/              # 14 tests (api, service, handler, formatters)
 ├── shared/                     # Shared library (UoW, repo, broker, cache, exceptions)
+├── .venv/                      # Shared virtual environment for local testing
 ├── start.sh                    # One-command startup script
 └── README.md
 ```
