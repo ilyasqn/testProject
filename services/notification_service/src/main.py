@@ -13,6 +13,7 @@ from slowapi.errors import RateLimitExceeded
 
 from configs.rabbitmq import rabbitmq_settings
 from src.api.router import router as api_router
+from src.dependencies import init_broker
 from src.handlers.event import EventHandler
 
 
@@ -20,6 +21,7 @@ from src.handlers.event import EventHandler
 async def lifespan(app: FastAPI):
     broker = RabbitMQBroker(rabbitmq_settings.URL)
     await broker.connect()
+    init_broker(broker)
 
     await broker.consume(
         queue_name="notification_service.user_registered",
