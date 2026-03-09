@@ -9,3 +9,9 @@ class NotificationSchemaRead(BaseModel):
     payload: str
     status: str
     created_at: datetime.datetime
+
+
+class NotificationStatsBucketSchema(BaseModel):
+    event_type: str
+    status: str
+    count: int

@@ -1,9 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
-from src.schemas.product import ProductSchemaCreate, ProductSchemaUpdate, ProductSchemaRead
+from src.schemas.product import ProductSchemaCreate, ProductSchemaUpdate, ProductSchemaRead, ProductStatsSchema
 from src.services.auth import get_current_user, CurrentUser
 from src.utils.unitofwork import IUnitOfWork, UnitOfWork
 from src.services.product import ProductService
@@ -24,6 +24,26 @@ async def create_product(
 ):
     product_id = await service.create(uow, product_data)
     return JSONResponse(content={"id": product_id})
+
+
+@router.get(path='/stats', response_model=ProductStatsSchema)
+async def get_product_stats(
+        uow: Annotated[IUnitOfWork, Depends(UnitOfWork)],
+        service: Annotated[ProductService, Depends(get_product_service)],
+):
+    return await service.get_stats(uow)
+
+
+@router.get(path='/search', response_model=list[ProductSchemaRead])
+async def search_products(
+        uow: Annotated[IUnitOfWork, Depends(UnitOfWork)],
+        service: Annotated[ProductService, Depends(get_product_service)],
+        q: Annotated[str | None, Query(description="Search in name and description")] = None,
+        min_price: Annotated[float | None, Query(ge=0)] = None,
+        max_price: Annotated[float | None, Query(ge=0)] = None,
+        in_stock: Annotated[bool | None, Query(description="Only products with stock > 0")] = None,
+):
+    return await service.search(uow, q, min_price, max_price, in_stock)
 
 
 @router.get(path='/', response_model=list[ProductSchemaRead])

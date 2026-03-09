@@ -26,3 +26,12 @@ class ProductSchemaRead(BaseModel):
     stock: int
     created_at: datetime.datetime
     updated_at: datetime.datetime
+
+
+class ProductStatsSchema(BaseModel):
+    total: int
+    avg_price: float
+    min_price: float
+    max_price: float
+    total_stock_value: float
+    out_of_stock: int

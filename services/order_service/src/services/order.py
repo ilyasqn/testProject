@@ -1,6 +1,6 @@
 from shared.broker import RabbitMQBroker
 from shared.utils.unitofwork import IUnitOfWork
-from src.schemas.order import OrderSchemaCreate
+from src.schemas.order import OrderSchemaCreate, OrderStatsSchema
 
 ORDER_EXCHANGE = "order_events"
 
@@ -27,11 +27,24 @@ class OrderService:
         })
         return order_id
 
-    async def get_user_orders(self, uow: IUnitOfWork, user_id: int) -> list:
+    async def get_user_orders(
+        self,
+        uow: IUnitOfWork,
+        user_id: int,
+        offset: int = 0,
+        limit: int = 20,
+        status: str | None = None,
+    ) -> list:
         async with uow:
-            orders = await uow.orders.get_all_with_filters(user_id=user_id)
+            orders = await uow.orders.get_paginated(user_id, offset, limit, status)
             await uow.commit()
         return orders
+
+    async def get_user_stats(self, uow: IUnitOfWork, user_id: int) -> OrderStatsSchema:
+        async with uow:
+            stats = await uow.orders.get_user_stats(user_id)
+            await uow.commit()
+        return OrderStatsSchema(**stats)
 
     async def get_order(self, uow: IUnitOfWork, user_id: int, order_id: int):
         from shared.utils import exceptions

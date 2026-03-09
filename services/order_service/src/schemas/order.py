@@ -16,3 +16,12 @@ class OrderSchemaRead(BaseModel):
     total_price: float
     status: str
     created_at: datetime.datetime
+
+
+class OrderStatsSchema(BaseModel):
+    total_orders: int
+    confirmed: int
+    cancelled: int
+    pending: int
+    total_spent: float
+    avg_order_value: float

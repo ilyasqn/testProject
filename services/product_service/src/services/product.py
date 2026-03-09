@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 
-from src.schemas.product import ProductSchemaCreate, ProductSchemaUpdate, ProductSchemaRead
+from src.schemas.product import ProductSchemaCreate, ProductSchemaUpdate, ProductSchemaRead, ProductStatsSchema
 from shared.utils import exceptions
 from shared.utils.unitofwork import IUnitOfWork
 from shared.cache import RedisCache
@@ -66,6 +66,25 @@ class ProductService:
             {"product_id": updated_id}
         )
         return updated_id
+
+    async def search(
+        self,
+        uow: IUnitOfWork,
+        q: str | None,
+        min_price: float | None,
+        max_price: float | None,
+        in_stock: bool | None,
+    ) -> list[ProductSchemaRead]:
+        async with uow:
+            products = await uow.products.search(q, min_price, max_price, in_stock)
+            await uow.commit()
+        return [ProductSchemaRead.model_validate(p, from_attributes=True) for p in products]
+
+    async def get_stats(self, uow: IUnitOfWork) -> ProductStatsSchema:
+        async with uow:
+            stats = await uow.products.get_stats()
+            await uow.commit()
+        return ProductStatsSchema(**stats)
 
     async def delete(self, uow: IUnitOfWork, product_id: int) -> None:
         async with uow:
