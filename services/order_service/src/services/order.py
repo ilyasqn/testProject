@@ -1,12 +1,10 @@
-from shared.broker import RabbitMQBroker
+from shared.broker import MessageBroker
 from shared.utils.unitofwork import IUnitOfWork
 from src.schemas.order import OrderSchemaCreate, OrderStatsSchema
 
-ORDER_EXCHANGE = "order_events"
-
 
 class OrderService:
-    def __init__(self, broker: RabbitMQBroker):
+    def __init__(self, broker: MessageBroker):
         self._broker = broker
 
     async def create(self, uow: IUnitOfWork, user_id: int, order_data: OrderSchemaCreate) -> int:
@@ -19,7 +17,7 @@ class OrderService:
                 "status": "pending",
             })
             await uow.commit()
-        await self._broker.publish_event(ORDER_EXCHANGE, "order.create_requested", {
+        await self._broker.publish("order.create_requested", {
             "order_id": order_id,
             "user_id": user_id,
             "product_id": order_data.product_id,

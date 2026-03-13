@@ -26,8 +26,8 @@ async def test_create_order_publishes_saga_event(mock_uow, order_service, mock_b
 
     await order_service.create(mock_uow, user_id=1, order_data=OrderSchemaCreate(product_id=2, quantity=1))
 
-    mock_broker.publish_event.assert_called_once()
-    _, event_type, data = mock_broker.publish_event.call_args[0]
+    mock_broker.publish.assert_called_once()
+    event_type, data = mock_broker.publish.call_args[0]
     assert event_type == "order.create_requested"
     assert data["order_id"] == 7
     assert data["product_id"] == 2

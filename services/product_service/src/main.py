@@ -7,7 +7,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from shared.middlewares import LoggingMiddleware
 from shared.limiter import limiter
 from shared.cache import RedisCache
-from shared.broker import RabbitMQBroker
+from shared.broker import MessageBroker
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
@@ -23,24 +23,16 @@ from src.handlers.order import OrderEventHandler
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     cache = RedisCache(redis_settings.URL)
-    broker = RabbitMQBroker(rabbitmq_settings.URL)
+    broker = MessageBroker(rabbitmq_settings.URL, "product")
 
     await cache.connect()
-    await broker.connect()
+    await broker.setup()
     init_dependencies(cache, broker)
 
-    await broker.consume(
-        queue_name="product_service.user_registered",
-        exchange_name="user_events",
-        routing_key="user.registered",
-        callback=UserEventHandler.handle_registered,
-    )
-    await broker.consume(
-        queue_name="product_service.order_create_requested",
-        exchange_name="order_events",
-        routing_key="order.create_requested",
-        callback=OrderEventHandler.handle_create_requested,
-    )
+    await broker.subscribe("user.registered", UserEventHandler.handle_registered)
+    await broker.subscribe("order.create_requested", OrderEventHandler.handle_create_requested)
+    await broker.start_consuming()
+
     logger.info("Product service started")
 
     yield

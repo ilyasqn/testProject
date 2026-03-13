@@ -6,7 +6,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 from shared.middlewares import LoggingMiddleware
 from shared.limiter import limiter
-from shared.broker import RabbitMQBroker
+from shared.broker import MessageBroker
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
@@ -19,58 +19,19 @@ from src.handlers.event import EventHandler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    broker = RabbitMQBroker(rabbitmq_settings.URL)
-    await broker.connect()
+    broker = MessageBroker(rabbitmq_settings.URL, "notification")
+    await broker.setup()
     init_broker(broker)
 
-    await broker.consume(
-        queue_name="notification_service.user_registered",
-        exchange_name="user_events",
-        routing_key="user.registered",
-        callback=EventHandler.handle,
-    )
-    await broker.consume(
-        queue_name="notification_service.user_authenticated",
-        exchange_name="user_events",
-        routing_key="user.authenticated",
-        callback=EventHandler.handle,
-    )
-    await broker.consume(
-        queue_name="notification_service.product_created",
-        exchange_name="product_events",
-        routing_key="product.created",
-        callback=EventHandler.handle,
-    )
-    await broker.consume(
-        queue_name="notification_service.product_updated",
-        exchange_name="product_events",
-        routing_key="product.updated",
-        callback=EventHandler.handle,
-    )
-    await broker.consume(
-        queue_name="notification_service.product_deleted",
-        exchange_name="product_events",
-        routing_key="product.deleted",
-        callback=EventHandler.handle,
-    )
-    await broker.consume(
-        queue_name="notification_service.order_created",
-        exchange_name="product_events",
-        routing_key="order.created",
-        callback=EventHandler.handle,
-    )
-    await broker.consume(
-        queue_name="notification_service.order_confirmed",
-        exchange_name="order_events",
-        routing_key="order.confirmed",
-        callback=EventHandler.handle,
-    )
-    await broker.consume(
-        queue_name="notification_service.order_cancelled",
-        exchange_name="order_events",
-        routing_key="order.cancelled",
-        callback=EventHandler.handle,
-    )
+    await broker.subscribe("user.registered", EventHandler.handle)
+    await broker.subscribe("user.authenticated", EventHandler.handle)
+    await broker.subscribe("product.created", EventHandler.handle)
+    await broker.subscribe("product.updated", EventHandler.handle)
+    await broker.subscribe("product.deleted", EventHandler.handle)
+    await broker.subscribe("order.created", EventHandler.handle)
+    await broker.subscribe("order.confirmed", EventHandler.handle)
+    await broker.subscribe("order.cancelled", EventHandler.handle)
+    await broker.start_consuming()
 
     logger.info("Notification service started — consuming all events")
 

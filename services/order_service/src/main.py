@@ -6,7 +6,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 from shared.middlewares import LoggingMiddleware
 from shared.limiter import limiter
-from shared.broker import RabbitMQBroker
+from shared.broker import MessageBroker
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
@@ -20,28 +20,14 @@ from src.handlers.product import ProductEventHandler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    broker = RabbitMQBroker(rabbitmq_settings.URL)
-    await broker.connect()
+    broker = MessageBroker(rabbitmq_settings.URL, "order")
+    await broker.setup()
     init_broker(broker)
 
-    await broker.consume(
-        queue_name="order_service.order_confirmed",
-        exchange_name="order_events",
-        routing_key="order.confirmed",
-        callback=OrderEventHandler.handle_confirmed,
-    )
-    await broker.consume(
-        queue_name="order_service.order_cancelled",
-        exchange_name="order_events",
-        routing_key="order.cancelled",
-        callback=OrderEventHandler.handle_cancelled,
-    )
-    await broker.consume(
-        queue_name="order_service.product_deleted",
-        exchange_name="product_events",
-        routing_key="product.deleted",
-        callback=ProductEventHandler.handle_deleted,
-    )
+    await broker.subscribe("order.confirmed", OrderEventHandler.handle_confirmed)
+    await broker.subscribe("order.cancelled", OrderEventHandler.handle_cancelled)
+    await broker.subscribe("product.deleted", ProductEventHandler.handle_deleted)
+    await broker.start_consuming()
 
     logger.info("Order service started")
 

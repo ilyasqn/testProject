@@ -1,15 +1,15 @@
-from shared.broker import RabbitMQBroker
+from shared.broker import MessageBroker
 from src.services.order import OrderService
 
-_broker: RabbitMQBroker | None = None
+_broker: MessageBroker | None = None
 
 
-def init_broker(broker: RabbitMQBroker):
+def init_broker(broker: MessageBroker):
     global _broker
     _broker = broker
 
 
-def get_broker() -> RabbitMQBroker:
+def get_broker() -> MessageBroker:
     return _broker
 
 

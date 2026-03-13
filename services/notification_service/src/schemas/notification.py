@@ -15,11 +15,3 @@ class NotificationStatsBucketSchema(BaseModel):
     event_type: str
     status: str
     count: int
-
-
-class DLQMessageSchema(BaseModel):
-    dlq: str
-    original_queue: str
-    reason: str
-    death_count: int
-    body: dict

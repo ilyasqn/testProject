@@ -3,8 +3,6 @@ from loguru import logger
 from src.dependencies import get_broker, get_cache
 from src.utils.unitofwork import UnitOfWork
 
-ORDER_EXCHANGE = "order_events"
-
 
 class OrderEventHandler:
     @staticmethod
@@ -20,7 +18,7 @@ class OrderEventHandler:
             product, reason = await uow.products.decrement_stock(product_id, quantity)
             if product is None:
                 await uow.commit()
-                await get_broker().publish_event(ORDER_EXCHANGE, "order.cancelled", {
+                await get_broker().publish("order.cancelled", {
                     "order_id": order_id,
                     "reason": reason,
                 })
@@ -30,7 +28,7 @@ class OrderEventHandler:
 
         await get_cache().delete_pattern("products:*")
 
-        await get_broker().publish_event(ORDER_EXCHANGE, "order.confirmed", {
+        await get_broker().publish("order.confirmed", {
             "order_id": order_id,
             "total_price": total_price,
         })

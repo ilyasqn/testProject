@@ -29,7 +29,7 @@ async def test_create_saves_and_publishes(mock_uow, product_service, mock_cache,
     mock_uow.products.add_one.assert_called_once()
     mock_uow.commit.assert_called_once()
     mock_cache.delete_pattern.assert_called_once_with("products:*")
-    mock_broker.publish_event.assert_called_once()
+    mock_broker.publish.assert_called_once()
 
 
 async def test_get_all_returns_cached(mock_uow, product_service, mock_cache):
@@ -97,7 +97,7 @@ async def test_update_success(mock_uow, product_service, mock_cache, mock_broker
     assert result == 1
     mock_uow.commit.assert_called_once()
     mock_cache.delete.assert_called()
-    mock_broker.publish_event.assert_called_once()
+    mock_broker.publish.assert_called_once()
 
 
 async def test_delete_not_found_raises(mock_uow, product_service):
@@ -115,4 +115,4 @@ async def test_delete_success(mock_uow, product_service, mock_cache, mock_broker
     mock_uow.products.delete.assert_called_once_with(id=1)
     mock_uow.commit.assert_called_once()
     mock_cache.delete_pattern.assert_called()
-    mock_broker.publish_event.assert_called_once()
+    mock_broker.publish.assert_called_once()

@@ -4,13 +4,11 @@ from src.schemas.product import ProductSchemaCreate, ProductSchemaUpdate, Produc
 from shared.utils import exceptions
 from shared.utils.unitofwork import IUnitOfWork
 from shared.cache import RedisCache
-from shared.broker import RabbitMQBroker
-
-PRODUCT_EXCHANGE = "product_events"
+from shared.broker import MessageBroker
 
 
 class ProductService:
-    def __init__(self, cache: RedisCache, broker: RabbitMQBroker):
+    def __init__(self, cache: RedisCache, broker: MessageBroker):
         self._cache = cache
         self._broker = broker
 
@@ -19,8 +17,7 @@ class ProductService:
             product_id = await uow.products.add_one(product_data.model_dump())
             await uow.commit()
         await self._cache.delete_pattern("products:*")
-        await self._broker.publish_event(
-            PRODUCT_EXCHANGE, "product.created",
+        await self._broker.publish("product.created",
             {"product_id": product_id, "name": product_data.name}
         )
         return product_id
@@ -61,10 +58,7 @@ class ProductService:
             await uow.commit()
         await self._cache.delete(f"products:{product_id}")
         await self._cache.delete_pattern("products:list")
-        await self._broker.publish_event(
-            PRODUCT_EXCHANGE, "product.updated",
-            {"product_id": updated_id}
-        )
+        await self._broker.publish("product.updated", {"product_id": updated_id})
         return updated_id
 
     async def search(
@@ -95,7 +89,4 @@ class ProductService:
             await uow.commit()
         await self._cache.delete(f"products:{product_id}")
         await self._cache.delete_pattern("products:list")
-        await self._broker.publish_event(
-            PRODUCT_EXCHANGE, "product.deleted",
-            {"product_id": product_id}
-        )
+        await self._broker.publish("product.deleted", {"product_id": product_id})

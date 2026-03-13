@@ -1,1 +1,1 @@
-from .rabbitmq import *
+from .rabbitmq import MessageBroker
